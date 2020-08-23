@@ -15,7 +15,7 @@
     "lint": "eslint --no-error-on-unmatched-pattern \"index.js\" \"lib/**/*.js\" \"utils/**/*.js\" \"test/**/*.js\" \"scripts/**/*.js\"",
     "start:arangod": "node scripts/start_arangod",
     "pretest": "npm run start:arangod",
-    "test": "jest"
+    "test": "jest --bail --maxWorkers=1"
   },
   "pre-commit": [
     "lint"
