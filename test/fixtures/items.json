@@ -1,0 +1,14 @@
+[
+  {
+    "name": "large screen",
+    "type": "hardware",
+    "price": 999.99,
+    "tags": ["hifi", "display"]
+  },
+  {
+    "name": "hard drive",
+    "type": "hardware",
+    "price": 229.99,
+    "tags": ["ssd", "storage"]
+  }
+]
