@@ -312,14 +312,6 @@ describe('lib/query', () => {
       ).toThrow('"end" must be greater than "start". start: 0, end: 0')
     })
 
-    it('should ensure to be called only once', () => {
-      expect(
-        () => new Query(Item, 'findByType', 'hardware')
-          .slice(0, 1)
-          .slice(1, 2)
-      ).toThrow('slice limits has already been set')
-    })
-
     it('should slice results with given bounds', async () => {
       const results = await new Query(Item, 'findByType', 'hardware')
         .sortByPriceAsc()
