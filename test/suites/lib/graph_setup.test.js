@@ -4,12 +4,13 @@
 
 const connector = require('../../connector')
 const setupGraph = require('../../../lib/graph_setup')
+const { CollectionAdapter } = require('../../../lib/collection_factory')
 
 const graphName = 'knowledge'
-const User = { collectionName: 'users' }
-const Item = { collectionName: 'items' }
-const Bookmark = { collectionName: 'bookmarks' }
-const Connection = { collectionName: 'connections' }
+const User = class extends CollectionAdapter { static collectionName = 'users' }
+const Item = class extends CollectionAdapter { static collectionName = 'items' }
+const Bookmark = class extends CollectionAdapter { static collectionName = 'bookmarks' }
+const Connection = class extends CollectionAdapter { static collectionName = 'connections' }
 const documentCollections = [User, Item]
 const edgeCollections = [Bookmark, Connection]
 
@@ -63,7 +64,7 @@ describe('lib/graph_setup', () => {
       .rejects.toThrow('edges must be an array. Actual: undefined')
   )
 
-  it('should require edge collection name', () =>
+  it('should require edge collection', () =>
     expect(setupGraph(connector, {
       name: graphName,
 
@@ -74,7 +75,7 @@ describe('lib/graph_setup', () => {
     })).rejects.toThrow(MALFORMED_EDGE_DEFINITIONS)
   )
 
-  it('should reject unkown edge definition property', () =>
+  it('should reject unknown edge definition property', () =>
     expect(setupGraph(connector, {
       name: graphName,
 
@@ -110,6 +111,62 @@ describe('lib/graph_setup', () => {
       }]
     })).rejects.toThrow(MALFORMED_EDGE_DEFINITIONS)
   )
+
+  it('should accept only CollectionAdapter as edge collection', () =>
+    expect(setupGraph(connector, {
+      name: graphName,
+
+      edges: [{
+        collection: { collectionName: 'bookmarks' },
+        from: User,
+        to: Item
+      }]
+    })).rejects.toThrow(MALFORMED_EDGE_DEFINITIONS)
+  )
+
+  it('should accept only CollectionAdapter in "from"', async () => {
+    await expect(setupGraph(connector, {
+      name: graphName,
+
+      edges: [{
+        Bookmark,
+        from: { collectionName: 'users' },
+        to: Item
+      }]
+    })).rejects.toThrow(MALFORMED_EDGE_DEFINITIONS)
+
+    return expect(setupGraph(connector, {
+      name: graphName,
+
+      edges: [{
+        Bookmark,
+        from: [{ collectionName: 'users' }],
+        to: Item
+      }]
+    })).rejects.toThrow(MALFORMED_EDGE_DEFINITIONS)
+  })
+
+  it('should accept only CollectionAdapter in "to"', async () => {
+    await expect(setupGraph(connector, {
+      name: graphName,
+
+      edges: [{
+        Bookmark,
+        from: User,
+        to: { collectionName: 'items' }
+      }]
+    })).rejects.toThrow(MALFORMED_EDGE_DEFINITIONS)
+
+    return expect(setupGraph(connector, {
+      name: graphName,
+
+      edges: [{
+        Bookmark,
+        from: User,
+        to: [{ collectionName: 'items' }]
+      }]
+    })).rejects.toThrow(MALFORMED_EDGE_DEFINITIONS)
+  })
 
   it('should create named graph', async () => {
     await setupGraph(connector, {

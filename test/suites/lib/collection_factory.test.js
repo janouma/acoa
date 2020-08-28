@@ -3,7 +3,7 @@
 'use strict'
 
 const connector = require('../../connector')
-const { createDocumentCollection, createEdgeCollection } = require('../../../lib/collection_factory')
+const { createDocumentCollection, createEdgeCollection, CollectionAdapter } = require('../../../lib/collection_factory')
 const { proxyFromConstructor, proxyFromInstance } = require('../../../lib/proxies')
 const docs = require('../../fixtures/users')
 
@@ -56,6 +56,10 @@ describe('lib/collection_factory', () => {
     const collection = connector.edgeCollection(connectionCollectionName)
     expect(await collection.exists()).toBe(true)
     expect(collection.type).toBe(EDGE_COLLECTION_TYPE)
+  })
+
+  it('#CollectionAdapter should not be instanciated directly', () => {
+    expect(() => new CollectionAdapter()).toThrow('cannot instantiate abstract class CollectionAdapter')
   })
 
   describe('collection classes', () => {
