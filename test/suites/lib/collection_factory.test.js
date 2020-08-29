@@ -4,22 +4,15 @@
 
 const connector = require('../../connector')
 const { createDocumentCollection, createEdgeCollection, CollectionAdapter } = require('../../../lib/collection_factory')
-const { proxyFromConstructor, proxyFromInstance } = require('../../../lib/proxies')
 const docs = require('../../fixtures/users')
 
-jest.mock('../../../lib/proxies', () => ({
-  proxyFromConstructor: jest.fn(constructor => class ClassProxy extends constructor {
-    static isClassProxy = true
-  }).mockName('proxyFromConstructor'),
-
-  proxyFromInstance: jest.fn(instance => {
-    const proxy = Object.create(instance)
-    proxy.isInstanceProxy = true
-
-    return proxy
-  })
-    .mockName('proxyFromInstance')
-}))
+jest.mock('../../../lib/proxy_factory', () =>
+  CollectionClass => jest.requireActual('../../../lib/proxy_factory')(
+    class extends CollectionClass {
+      static isClassProxy = true
+    }
+  )
+)
 
 const DOCUMENT_COLLECTION_TYPE = 2
 const EDGE_COLLECTION_TYPE = 3
@@ -68,6 +61,18 @@ describe('lib/collection_factory', () => {
     beforeEach(() => { User = createDocumentCollection(connector, userCollectionName) })
 
     it('should have a public "connector" property', () => expect(User.connector).toBe(connector))
+
+    it('should have a public "collectionName" property', () => expect(User.collectionName).toBe(userCollectionName))
+
+    it('should have a internal "_connector" property', () => expect(User._connector).toBe(connector))
+
+    it('should have a internal "_rawCollection" property of the right type', () => {
+      expect(User._rawCollection).toEqual(connector.collection(userCollectionName))
+
+      const Connection = createEdgeCollection(connector, connectionCollectionName)
+
+      expect(Connection._rawCollection).toEqual(connector.edgeCollection(connectionCollectionName))
+    })
 
     ;[
       1,
@@ -143,21 +148,7 @@ describe('lib/collection_factory', () => {
       expect(connection).toEqual(expect.not.objectContaining(metas))
     })
 
-    it('should be a Proxy', () => {
-      const [[constructor]] = proxyFromConstructor.mock.calls
-      expect(constructor).toBe(Object.getPrototypeOf(User))
-
-      expect(User.isClassProxy).toBe(true)
-    })
-
-    it('should return a Proxy on construction', () => {
-      const user = new User()
-
-      const [[instance]] = proxyFromInstance.mock.calls
-      expect(instance).toBe(Object.getPrototypeOf(user))
-
-      expect(user.isInstanceProxy).toBe(true)
-    })
+    it('should be a Proxy', () => expect(User.isClassProxy).toBe(true))
 
     describe('#exists', () => {
       it('should return true if collection exists', async () => {
@@ -499,9 +490,6 @@ describe('lib/collection_factory', () => {
         const user = new User(existingUser)
         user.age = age
 
-        // simulating instance proxy
-        user._updatedFields.add('age')
-
         const updatedUser = await user.$save()
         const [actualUser] = await collection.lookupByKeys([existingUser._id])
 
@@ -591,11 +579,10 @@ describe('lib/collection_factory', () => {
         Object.assign(user, doc)
       })
 
-      it('should convert docuent to a plain json object', () => {
+      it('should convert document to a plain json object', () => {
         const serialized = JSON.stringify(user)
 
         expect(JSON.parse(serialized)).toEqual({
-          isInstanceProxy: true,
           firstname: 'aurora',
           lastname: 'lain',
           $id: 'users/key',
@@ -627,7 +614,6 @@ describe('lib/collection_factory', () => {
       Object.assign(user, doc)
 
       expect(JSON.parse(String(user))).toEqual({
-        isInstanceProxy: true,
         firstname: 'aurora',
         lastname: 'lain',
         $id: 'users/key',
