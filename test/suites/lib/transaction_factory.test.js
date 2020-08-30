@@ -216,8 +216,8 @@ describe('lib/transaction_factory', () => {
   })
 
   it('should allow usage of primitive constants', async () => {
-    const VERSION_NUMBER = 'v1'
-    const READ_SCOPE = 'read_scope'
+    const VERSION_NUMBER = 1
+    const READ_SCOPE = '"\\"read_scope\\""'
 
     function addUser ({ user, collectionName }) {
       const { db } = require('@arangodb')
