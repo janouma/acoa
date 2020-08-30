@@ -176,9 +176,7 @@ describe('lib/collection_factory', () => {
         }
 
         class UniqueUser extends User {
-          static get indexes () {
-            return [index]
-          }
+          static indexes = [index]
         }
 
         await UniqueUser.create()
@@ -197,7 +195,7 @@ describe('lib/collection_factory', () => {
 
       it('should reject all but array type indexes', async () => {
         class UniqueUser extends User {
-          static get indexes () { return {} }
+          static indexes = {}
         }
 
         return expect(UniqueUser.applyIndexes())
@@ -207,7 +205,7 @@ describe('lib/collection_factory', () => {
 
       it('should reject empty array', async () => {
         class UniqueUser extends User {
-          static get indexes () { return [] }
+          static indexes = []
         }
 
         return expect(UniqueUser.applyIndexes())
@@ -217,7 +215,7 @@ describe('lib/collection_factory', () => {
 
       it('should reject all but array type as fields', async () => {
         class UniqueUser extends User {
-          static get indexes () { return [{ fields: {} }] }
+          static indexes = [{ fields: {} }]
         }
 
         return expect(UniqueUser.applyIndexes())
@@ -227,7 +225,7 @@ describe('lib/collection_factory', () => {
 
       it('should reject empty array as fields', async () => {
         class UniqueUser extends User {
-          static get indexes () { return [{ fields: [] }] }
+          static indexes = [{ fields: [] }]
         }
 
         return expect(UniqueUser.applyIndexes())
@@ -237,11 +235,9 @@ describe('lib/collection_factory', () => {
 
       it('should reject empty "type"', async () => {
         class UniqueUser extends User {
-          static get indexes () {
-            return [{
-              fields: ['name']
-            }]
-          }
+          static indexes = [{
+            fields: ['name']
+          }]
         }
 
         return expect(UniqueUser.applyIndexes())
@@ -251,12 +247,10 @@ describe('lib/collection_factory', () => {
 
       it('should reject non-string "type"', async () => {
         class UniqueUser extends User {
-          static get indexes () {
-            return [{
-              type: {},
-              fields: ['name']
-            }]
-          }
+          static indexes = [{
+            type: {},
+            fields: ['name']
+          }]
         }
 
         return expect(UniqueUser.applyIndexes())
@@ -281,12 +275,10 @@ describe('lib/collection_factory', () => {
         }
 
         class UniqueUser extends User {
-          static get indexes () {
-            return [
-              uniqueIndex,
-              fulltextIndex
-            ]
-          }
+          static indexes = [
+            uniqueIndex,
+            fulltextIndex
+          ]
         }
 
         await UniqueUser.applyIndexes()
