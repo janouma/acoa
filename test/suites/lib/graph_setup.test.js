@@ -7,10 +7,10 @@ const setupGraph = require('../../../lib/graph_setup')
 const { CollectionAdapter } = require('../../../lib/collection_factory')
 
 const graphName = 'knowledge'
-const User = class extends CollectionAdapter { static collectionName = 'users' }
-const Item = class extends CollectionAdapter { static collectionName = 'items' }
-const Bookmark = class extends CollectionAdapter { static collectionName = 'bookmarks' }
-const Connection = class extends CollectionAdapter { static collectionName = 'connections' }
+class User extends CollectionAdapter { static collectionName = 'users' }
+class Item extends CollectionAdapter { static collectionName = 'items' }
+class Bookmark extends CollectionAdapter { static collectionName = 'bookmarks' }
+class Connection extends CollectionAdapter { static collectionName = 'connections' }
 const documentCollections = [User, Item]
 const edgeCollections = [Bookmark, Connection]
 
