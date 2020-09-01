@@ -2,16 +2,7 @@
 
 const { Database } = require('arangojs')
 
-const protocol = 'http'
-const host = 'localhost'
-const port = 8529
-const name = 'acoa-test'
-const user = 'test'
-const pass = 'evod'
-
-const url = `${protocol}://${user}:${pass}@${host}:${port}`
-const connector = new Database({ url })
-
-connector.useDatabase(name)
+const connector = new Database({ url: process.env.npm_package_config_testDbUrl })
+connector.useDatabase(process.env.npm_package_config_testDbName)
 
 module.exports = connector

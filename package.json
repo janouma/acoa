@@ -11,6 +11,10 @@
   "author": "janouma",
   "license": "ISC",
   "main": "index.js",
+  "config": {
+    "testDbUrl": "http://test:evod@localhost:8529",
+    "testDbName": "acoa-test"
+  },
   "scripts": {
     "lint": "eslint --no-error-on-unmatched-pattern \"index.js\" \"lib/**/*.js\" \"utils/**/*.js\" \"test/**/*.js\" \"scripts/**/*.js\"",
     "start:arangod": "node scripts/start_arangod",
