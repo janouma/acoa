@@ -123,17 +123,13 @@ describe('lib/collection_factory', () => {
       const from = `${userCollectionName}/key52`
       const to = `${userCollectionName}/key345`
 
-      const metas = {
-        _id: id,
-        _key: key,
-        _from: from,
-        _to: to
-      }
-
       const Connection = createEdgeCollection(connector, connectionCollectionName)
 
       const connection = new Connection({
-        ...metas,
+        _id: id,
+        _key: key,
+        _from: from,
+        _to: to,
         a: 'A'
       })
 
@@ -144,8 +140,6 @@ describe('lib/collection_factory', () => {
         $to: to,
         a: 'A'
       }))
-
-      expect(connection).toEqual(expect.not.objectContaining(metas))
     })
 
     it('should be a Proxy', () => expect(User.isClassProxy).toBe(true))
@@ -430,21 +424,6 @@ describe('lib/collection_factory', () => {
       return User.create()
     })
 
-    it.each([
-      '$id',
-      '$key'
-    ])('should have a one time "%s" setter', prop => {
-      const value = `${prop} value`
-      const user = new User()
-
-      user[prop] = value
-
-      expect(user[prop]).toBe(value)
-
-      expect(() => { user[prop] = `${prop} another value` })
-        .toThrow(`Cannot assign to read only property '${prop}' of object '[object Object]'`)
-    })
-
     describe('#$save', () => {
       it('should insert new document', async () => {
         const [doc] = docs
@@ -457,7 +436,66 @@ describe('lib/collection_factory', () => {
         expect(insertedUser).toEqual(expect.any(User))
 
         expect(insertedUser).toEqual(expect.objectContaining({
+          ...actualUser,
+          $id: expect.stringMatching(new RegExp(`^${userCollectionName}/\\w+$`)),
+          $key: expect.stringMatching(/^\w+$/)
+        }))
+      })
+
+      it('should insert edge properties for edge document', async () => {
+        const userCollection = collection
+        await userCollection.import(docs)
+
+        const [
+          { _id: _from },
+          { _id: _to }
+        ] = await (await userCollection.all()).all()
+
+        const Connection = createEdgeCollection(connector, connectionCollectionName)
+        await Connection.create()
+
+        const doc = {
+          relation: 'lover',
+          _from,
+          _to
+        }
+
+        const connection = new Connection(doc)
+        const insertedConnection = await connection.$save()
+        const actualConnection = await (await connector.edgeCollection(connectionCollectionName).all()).next()
+
+        expect(actualConnection).toEqual(expect.objectContaining(doc))
+        expect(insertedConnection).toEqual(expect.any(Connection))
+
+        expect(insertedConnection).toEqual(expect.objectContaining({
+          ...actualConnection,
+          $id: expect.stringMatching(new RegExp(`^${connectionCollectionName}/\\w+$`)),
+          $key: expect.stringMatching(/^\w+$/),
+          $from: _from,
+          $to: _to
+        }))
+      })
+
+      it('should NOT insert reserved properties', async () => {
+        const [doc] = docs
+
+        const user = new User({
           ...doc,
+          _underscored: 'prefixed by underscore',
+          $dollared: 'prefixed by dollar'
+        })
+
+        const insertedUser = await user.$save()
+
+        const actualUser = await (await collection.all()).next()
+
+        expect(actualUser).toEqual(expect.objectContaining(doc))
+        expect('_underscored' in actualUser).toBe(false)
+        expect('$dollared' in actualUser).toBe(false)
+        expect(insertedUser).toEqual(expect.any(User))
+
+        expect(insertedUser).toEqual(expect.objectContaining({
+          ...actualUser,
           $id: expect.stringMatching(new RegExp(`^${userCollectionName}/\\w+$`)),
           $key: expect.stringMatching(/^\w+$/)
         }))
@@ -550,7 +588,7 @@ describe('lib/collection_factory', () => {
       await user.$refresh()
 
       expect(user).toEqual(expect.objectContaining({
-        ...doc,
+        ...existingUser,
         $id: existingUser._id,
         $key: existingUser._key
       }))
@@ -565,7 +603,11 @@ describe('lib/collection_factory', () => {
 
         user = new User({
           _id: `${userCollectionName}/key`,
-          _key: 'key'
+          _key: 'key',
+          _from: 'from',
+          _to: 'to',
+          _internal: 'internal prop',
+          fn: () => {}
         })
 
         Object.assign(user, doc)
@@ -574,23 +616,29 @@ describe('lib/collection_factory', () => {
       it('should convert document to a plain json object', () => {
         const serialized = JSON.stringify(user)
 
-        expect(JSON.parse(serialized)).toEqual({
+        const expected = {
           firstname: 'aurora',
           lastname: 'lain',
           $id: 'users/key',
-          $key: 'key'
-        })
+          $key: 'key',
+          $from: 'from',
+          $to: 'to'
+        }
+
+        expect(JSON.parse(serialized)).toEqual(expected)
+        expect(user.toJSON()).toEqual(expected)
       })
 
       it('should filter out props from "omit" option', () => {
         const serialized = JSON.stringify(
-          user.toJSON({ omit: ['isInstanceProxy', '$key'] })
+          user.toJSON({ omit: ['lastname', '$key'] })
         )
 
         expect(JSON.parse(serialized)).toEqual({
           firstname: 'aurora',
-          lastname: 'lain',
-          $id: 'users/key'
+          $id: 'users/key',
+          $from: 'from',
+          $to: 'to'
         })
       })
     })
