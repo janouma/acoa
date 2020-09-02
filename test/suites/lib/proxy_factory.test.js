@@ -16,10 +16,13 @@ describe('lib/proxies', () => {
   afterEach(() => jest.clearAllMocks())
 
   const cacheSym = Symbol('cache')
+  const job = 'agent'
 
   class User {
     static findByName () {}
     static [cacheSym] = { cachedProp: 'cached' }
+
+    job = job
 
     _updatedFields = new Set()
   }
@@ -50,12 +53,20 @@ describe('lib/proxies', () => {
     expect(userProxy._updatedFields.has('name')).toBe(true)
   })
 
+  it('should create Proxy that does NOT mark unchanged set prop as updated field', () => {
+    const userProxy = new UserProxy()
+
+    userProxy.job = job
+
+    expect(userProxy._updatedFields.has('job')).toBe(false)
+  })
+
   it.each([
     '_id',
     '$key',
     'toJSON',
     'toString'
-  ])('should create Proxy that does NOT marks reserved prop "%s" as updated field', prop => {
+  ])('should create Proxy that does NOT mark reserved prop "%s" as updated field', prop => {
     const userProxy = new UserProxy()
 
     const value = `${prop} value`

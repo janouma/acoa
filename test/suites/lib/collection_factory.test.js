@@ -549,6 +549,8 @@ describe('lib/collection_factory', () => {
         const existingUser = await (await collection.all()).next()
         const user = new User(existingUser)
 
+        user.firstname = existingUser.firstname
+
         await user.$save()
         const [actualUser] = await collection.lookupByKeys([existingUser._id])
 
