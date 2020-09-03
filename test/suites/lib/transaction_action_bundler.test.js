@@ -3,7 +3,7 @@
 'use strict'
 
 const connector = require('../../connector')
-const createTransaction = require('../../../lib/transaction_factory')
+const bundleTransactionAction = require('../../../lib/transaction_action_bundler')
 
 const usersCollectionName = 'users'
 const collection = connector.collection(usersCollectionName)
@@ -23,20 +23,20 @@ function expectMatch (result, expected) {
   )
 }
 
-describe('lib/transaction_factory', () => {
+describe('lib/transaction_action_bundler', () => {
   beforeAll(() => collection.create())
   afterEach(() => collection.truncate())
   afterAll(() => collection.drop())
 
   it('should accept only function as "init" param', () => {
-    expect(() => createTransaction({ init: 'not a function' }))
+    expect(() => bundleTransactionAction({ init: 'not a function' }))
       .toThrow('init function is required')
   })
 
   it('should accept only hash of functions as "dependencies" param', () => {
     const dependencies = { notAFunction: 'not a function' }
 
-    expect(() => createTransaction({
+    expect(() => bundleTransactionAction({
       init: () => {},
       dependencies
     }))
@@ -48,7 +48,7 @@ describe('lib/transaction_factory', () => {
     [],
     2
   ].forEach(constants => it(`should reject ${Array.isArray(constants) ? 'array' : typeof constants} as "constants" param`, () => {
-    expect(() => createTransaction({
+    expect(() => bundleTransactionAction({
       init: () => {},
       constants
     }))
@@ -68,7 +68,7 @@ describe('lib/transaction_factory', () => {
       ).toArray()[0]
     }
 
-    const transaction = createTransaction({ init: addUser })
+    const transaction = bundleTransactionAction({ init: addUser })
 
     const inserted = await connector.transaction(
       { write: [usersCollectionName] },
@@ -100,7 +100,7 @@ describe('lib/transaction_factory', () => {
       ).toArray()[0]
     }
 
-    const transaction = createTransaction({ init: addUser })
+    const transaction = bundleTransactionAction({ init: addUser })
 
     const inserted = await connector.transaction(
       { write: [usersCollectionName] },
@@ -143,7 +143,7 @@ describe('lib/transaction_factory', () => {
         .toArray()[0]
     }
 
-    const transaction = createTransaction({
+    const transaction = bundleTransactionAction({
       init: addUser,
 
       dependencies: {
@@ -189,7 +189,7 @@ describe('lib/transaction_factory', () => {
         .toArray()[0]
     }
 
-    const transaction = createTransaction({
+    const transaction = bundleTransactionAction({
       init: addUser,
 
       dependencies: {
@@ -240,7 +240,7 @@ describe('lib/transaction_factory', () => {
       ).toArray()[0]
     }
 
-    const transaction = createTransaction({
+    const transaction = bundleTransactionAction({
       init: addUser,
 
       constants: {
@@ -297,7 +297,7 @@ describe('lib/transaction_factory', () => {
       ).toArray()[0]
     }
 
-    const transaction = createTransaction({
+    const transaction = bundleTransactionAction({
       init: addUser,
 
       constants: {
@@ -351,7 +351,7 @@ describe('lib/transaction_factory', () => {
       ).toArray()[0]
     }
 
-    const transaction = createTransaction({
+    const transaction = bundleTransactionAction({
       init: addUser,
 
       constants: {
