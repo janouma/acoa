@@ -516,9 +516,19 @@ describe('lib/collection_factory', () => {
 
         const existingUser = await (await collection.all()).next()
         const age = 36
+        const location = 'Paris'
+        const job = 'designer'
 
         const user = new User(existingUser)
         user.age = age
+
+        Object.assign(
+          user,
+          {
+            location,
+            job
+          }
+        )
 
         const updatedUser = await user.$save()
         const [actualUser] = await collection.lookupByKeys([existingUser._id])
@@ -529,7 +539,9 @@ describe('lib/collection_factory', () => {
           ...doc,
           _id: existingUser._id,
           _key: existingUser._key,
-          age
+          age,
+          location,
+          job
         }))
 
         expect(updatedUser).toEqual(expect.any(User))
@@ -538,7 +550,9 @@ describe('lib/collection_factory', () => {
           ...doc,
           $id: existingUser._id,
           $key: existingUser._key,
-          age
+          age,
+          location,
+          job
         }))
       })
 
