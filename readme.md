@@ -23,14 +23,14 @@ new Item({
 })
   .$save()
   .then(it => console.log(`item ${it.$id} successfully inserted`))
+```
 
-…
-
+```javascript
 Item.get('items/uydgldq467qsde89==')
   .then(it => console.log(`item ${it.reference} successfully fetched`))
+```
 
-…
-
+```javascript
 Item.findByDescriptionMatching(/wrist/i)
   .sortByNameAsc()
   .slice(20, 30)
