@@ -1,9 +1,12 @@
-<p align="center">
-  <h1>
-    ACOA<br><small><b>A</b>rango <b>C</b>ollection <b>O</b>bject <b>A</b>dapter</small>
-  </h1>
-  <img src="logo.jpg"></img>
-</p>
+# ACOA
+<b>A</b>rango <b>C</b>ollection <b>O</b>bject <b>A</b>dapter
+
+![logo](logo.jpg)
+
+# Install
+```bash
+npm i -S acoa
+```
 
 # At a glance
 ACOA is an object document mapper (ODM) for Arangodb: it provides a set of utilities allowing to manipulate collection through js classes and objects.
