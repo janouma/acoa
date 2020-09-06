@@ -1,7 +1,7 @@
 # ACOA
 <b>A</b>rango <b>C</b>ollection <b>O</b>bject <b>A</b>dapter
 
-![logo](https://github.com/janouma/acoa/blob/master/logo.jpg)
+![logo](https://janouma.github.io/acoa/logo.jpg)
 
 # Install
 ```bash
