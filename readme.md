@@ -48,4 +48,4 @@ Item.findByDescriptionMatching(/wrist/i)
 
 ```
 
-For more details see the [documentation](doc/summary.md)
+For more details see the [documentation](https://github.com/janouma/acoa/blob/master/doc/summary.md)
