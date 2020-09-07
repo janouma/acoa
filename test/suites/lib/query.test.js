@@ -90,6 +90,10 @@ describe('lib/query', () => {
     ['findByNameNotMatching', 'regexp literal mismatch', ['\\sscre\\w+'], [docs[1]]],
     ['findByNameMatching', 'regexp object match', [/\sScre\w+/i], [docs[0]]],
     ['findByNameNotMatching', 'regexp object mismatch', [/\sscre\w+/], [docs[1]]],
+    ['findByTagsContainingOneOf', 'exact match', ['hifi', 'ssd'], docs],
+    ['findByTagsContainingOneOf', 'exact match', ['hifi'], [docs[0]]],
+    ['findByTagsNotContainingOneOf', 'exact mismatch', ['hifi', 'ssd'], docs],
+    ['findByTagsNotContainingOneOf', 'exact mismatch', ['hifi'], [docs[1]]],
     ['findByTagsContaining', 'exact match', ['hifi'], [docs[0]]],
     ['findByTagsNotContaining', 'exact mismatch', ['hifi'], [docs[1]]],
     ['findByName', 'exact match', ['large screen', 'hard drive'], docs],
@@ -100,9 +104,11 @@ describe('lib/query', () => {
     ['findByTagsNotContaining', 'exact mismatch', ['hifi', 'display'], [docs[1]]],
     ['findByName', 'exact match', [], []],
     ['findByNameEqual', 'exact match', [], []],
+    ['findByTagsContainingOneOf', 'exact match', [], []],
     ['findByTagsContaining', 'exact match', [], docs],
     ['findByNameNot', 'exact mismatch', [], docs],
     ['findByNameNotEqual', 'exact mismatch', [], docs],
+    ['findByTagsNotContainingOneOf', 'exact mismatch', [], []],
     ['findByTagsNotContaining', 'exact mismatch', [], docs]
   ].forEach(([methodName, match, values, expected]) => {
     describe(`#${methodName}`, () => {
@@ -184,6 +190,10 @@ describe('lib/query', () => {
     ['nameNotMatching', [docs[1]], 'NOT matching literal regexp', ['\\sscre\\w+']],
     ['nameMatching', [docs[0]], 'matching object regexp', [/\sScre\w+/gim]],
     ['nameNotMatching', [docs[1]], 'NOT matching object regexp', [/\sscre\w+/]],
+    ['tagsContainingOneOf', docs, 'containing one of', ['hifi', 'ssd']],
+    ['tagsContainingOneOf', [docs[0]], 'containing one of', ['hifi']],
+    ['tagsNotContainingOneOf', docs, 'NOT containing one of', ['hifi', 'ssd']],
+    ['tagsNotContainingOneOf', [docs[1]], 'NOT containing one of', ['hifi']],
     ['tagsContaining', [docs[0]], 'containing', ['hifi']],
     ['tagsContaining', [docs[0]], 'containing', ['hifi', 'display']],
     ['tagsNotContaining', [docs[1]], 'NOT containing', ['hifi']],
@@ -192,6 +202,8 @@ describe('lib/query', () => {
     ['nameEqual', [], 'matching exact', []],
     ['nameNot', docs, 'NOT matching exact', []],
     ['nameNotEqual', docs, 'NOT matching exact', []],
+    ['tagsContainingOneOf', [], 'containing', []],
+    ['tagsNotContainingOneOf', [], 'NOT containing', []],
     ['tagsContaining', docs, 'containing', []],
     ['tagsNotContaining', docs, 'NOT containing', []]
   ].forEach(([additionalFilter, expected, equality, values]) => {

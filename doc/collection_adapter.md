@@ -145,6 +145,8 @@ const results = await User.findByLocation('Paris')
   .run()
 ```
 
+<br>
+
 <ins>Formal query syntax</ins>
 
 ```html
@@ -155,18 +157,35 @@ findBy<Field><Comparator>?(<value>[, <value>]*)
   .run()
 
 where <Comparator> = Equal | NotEqual | Not | GreaterThan | GreaterThanOrEqual | LesserThan | LesserThanOrEqual |
-Matching | NotMatching | Containing | NotContaining
+Matching | NotMatching | Containing | NotContaining | ContainingOneOf | NotContainingOneOf
 ```
 
 *Notice the capitalized occurances of `<Field>` and `<Comparator>` : at those positions the first letter must be uppercase.*
 
-> Boolean operators – *`and`, `or`* – cannot be mixed: once you've started with one, you must carry on with only it.
+<br>
 
-> `Greater…`, `Lesser…`, `Matching` and `NotMatching` comparators does not support multiple values.
+<ins>Comparators description</ins>
 
-> `Matching` and `NotMatching` comparators accept a RegExp String or RegExp Object as value.<br>Flags can only be set with a RegExp Object *(only the `i` flag is supported)*
+Comparator | Description | Allows multiple values
+---------- | ----------- | ----------------------
+&nbsp; | strict equality | yes
+`Equal` | strict equality | yes
+`Not` | strict inequality | yes
+`NotEqual` | strict inequality | yes
+`GreaterThan` | > | no
+`GreaterThanOrEqual` | >= | no
+`LesserThan` | < | no
+`LesserThanOrEqual` | <= | no
+`Matching` | match against RegExp `String` or `RegExp` object<sup>(1)</sup> | no
+`NotMatching` | mismatch against RegExp `String` or `RegExp` object<sup>(1)</sup> | no
+`Containing` | check for inclusion of all values in an array field | yes
+`NotContaining` | check for exclusion of all values from an array field | yes
+`ContainingOneOf` | check for inclusion of any value in an array field | yes
+`NotContainingOneOf` | check for exclusion of any value from an array field | yes
 
-> `Containing` and `NotContaining` comparators only work for array fields.
+<br>
+
+> (1) : Flags can only be set with a `RegExp` object, and only the `i` flag is supported – *any other flag is ignored*
 
 <br>
 
