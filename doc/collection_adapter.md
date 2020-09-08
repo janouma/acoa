@@ -160,7 +160,7 @@ where <Comparator> = Equal | NotEqual | Not | GreaterThan | GreaterThanOrEqual |
 Matching | NotMatching | Containing | NotContaining | ContainingOneOf | NotContainingOneOf
 ```
 
-*Notice the capitalized occurances of `<Field>` and `<Comparator>` : at those positions the first letter must be uppercase.*
+*Notice the capitalized occurrences of `<Field>` and `<Comparator>` : at those positions the first letter must be uppercase.*
 
 <br>
 
