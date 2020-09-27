@@ -6,13 +6,20 @@ const connector = require('../../connector')
 const { createDocumentCollection, createEdgeCollection, CollectionAdapter } = require('../../../lib/collection_factory')
 const docs = require('../../fixtures/users')
 
-jest.mock('../../../lib/proxy_factory', () =>
-  CollectionClass => jest.requireActual('../../../lib/proxy_factory')(
+jest.mock('../../../lib/proxy_factory', () => ({
+  createInstanceProxy: collectionInstance => {
+    const instanceDelegate = Object.create(collectionInstance)
+    instanceDelegate.isInstanceProxy = () => true
+
+    return jest.requireActual('../../../lib/proxy_factory').createInstanceProxy(instanceDelegate)
+  },
+
+  createClassProxy: CollectionClass => jest.requireActual('../../../lib/proxy_factory').createClassProxy(
     class extends CollectionClass {
-      static isClassProxy = true
+      static isClassProxy = () => true
     }
   )
-)
+}))
 
 const DOCUMENT_COLLECTION_TYPE = 2
 const EDGE_COLLECTION_TYPE = 3
@@ -142,7 +149,7 @@ describe('lib/collection_factory', () => {
       }))
     })
 
-    it('should be a Proxy', () => expect(User.isClassProxy).toBe(true))
+    it('should be a Proxy', () => expect(User.isClassProxy()).toBe(true))
 
     describe('#exists', () => {
       it('should return true if collection exists', async () => {
@@ -424,6 +431,8 @@ describe('lib/collection_factory', () => {
       return User.create()
     })
 
+    it('should be a Proxy', () => expect(new User().isInstanceProxy()).toBe(true))
+
     describe('#$save', () => {
       it('should insert new document', async () => {
         const [doc] = docs
@@ -573,10 +582,12 @@ describe('lib/collection_factory', () => {
 
       it('should run "$beforeSave()" hook', async () => {
         class FullnameUser extends User {
-          $beforeSave = props => Promise.resolve({
-            ...props,
-            fullname: `${props.firstname} ${props.lastname}`
-          })
+          $beforeSave (props) {
+            return Promise.resolve({
+              ...props,
+              fullname: `${props.firstname} ${props.lastname}`
+            })
+          }
         }
 
         const [doc] = docs
