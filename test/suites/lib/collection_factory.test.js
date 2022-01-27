@@ -5,6 +5,7 @@
 const connector = require('../../connector')
 const { createDocumentCollection, createEdgeCollection, CollectionAdapter } = require('../../../lib/collection_factory')
 const docs = require('../../fixtures/users')
+const { createClassProxy } = require('../../../lib/proxy_factory')
 
 jest.mock('../../../lib/proxy_factory', () => ({
   createInstanceProxy: collectionInstance => {
@@ -14,11 +15,11 @@ jest.mock('../../../lib/proxy_factory', () => ({
     return jest.requireActual('../../../lib/proxy_factory').createInstanceProxy(instanceDelegate)
   },
 
-  createClassProxy: CollectionClass => jest.requireActual('../../../lib/proxy_factory').createClassProxy(
+  createClassProxy: jest.fn(CollectionClass => jest.requireActual('../../../lib/proxy_factory').createClassProxy(
     class extends CollectionClass {
       static isClassProxy = () => true
     }
-  )
+  )).mockName('createClassProxy')
 }))
 
 const DOCUMENT_COLLECTION_TYPE = 2
@@ -30,6 +31,19 @@ const expectedDocs = docs.map(doc => expect.objectContaining(doc))
 describe('lib/collection_factory', () => {
   const userCollectionName = 'users'
   const connectionCollectionName = 'connections'
+
+  function integratedExtend (extend) {
+    const extendedCollection = createDocumentCollection(
+      connector,
+      userCollectionName,
+      extend
+    )
+
+    const extendProperties = { ...extend(class {}) }
+
+    expect(createClassProxy).toHaveBeenCalledWith(expect.objectContaining(extendProperties))
+    return extendedCollection
+  }
 
   afterEach(() => {
     jest.clearAllMocks()
@@ -162,30 +176,32 @@ describe('lib/collection_factory', () => {
 
     describe('#create', () => {
       it('should handle creation options', async () => {
-        await User.create({ isVolatile: true })
+        await User.create({ waitForSync: true })
         const collection = connector.collection(userCollectionName)
 
-        expect((await collection.properties()).isVolatile).toBe(true)
+        expect((await collection.properties()).waitForSync).toBe(true)
       })
 
-      it('should apply indexes if any', async () => {
-        const index = {
-          type: 'hash',
-          fields: ['name'],
-          unique: true,
-          deduplicate: true
-        }
+      Object.entries({
+        classic (extend) { return extend(User) },
+        integrated: integratedExtend
+      }).forEach(([extendType, extend]) => {
+        it(`should apply indexes if any with ${extendType} extend type`, async () => {
+          const index = {
+            type: 'hash',
+            fields: ['name'],
+            unique: true,
+            deduplicate: true
+          }
 
-        class UniqueUser extends User {
-          static indexes = [index]
-        }
+          const UniqueUser = extend(BaseClass => class extends BaseClass { static indexes = [index] })
+          await UniqueUser.create()
 
-        await UniqueUser.create()
+          const actualindex = (await connector.collection(userCollectionName).indexes())
+            .find(({ type }) => type === index.type)
 
-        const actualindex = (await connector.collection(userCollectionName).indexes())
-          .find(({ type }) => type === index.type)
-
-        expect(actualindex).toEqual(expect.objectContaining(index))
+          expect(actualindex).toEqual(expect.objectContaining(index))
+        })
       })
     })
 
@@ -194,108 +210,103 @@ describe('lib/collection_factory', () => {
 
       beforeEach(() => collection.create())
 
-      it('should reject all but array type indexes', async () => {
-        class UniqueUser extends User {
-          static indexes = {}
-        }
+      Object.entries({
+        classic (extend) { return extend(User) },
+        integrated: integratedExtend
+      }).forEach(([extendType, extend]) => {
+        describe(`with ${extendType} extend type`, () => {
+          it('should reject all but array type indexes', async () => {
+            const UniqueUser = extend(BaseClass => class extends BaseClass { static indexes = {} })
 
-        return expect(UniqueUser.applyIndexes())
-          .rejects
-          .toThrow(/^indexes must be a non-empty array. Actual\s+\[object Object\]$/)
-      })
+            return expect(UniqueUser.applyIndexes())
+              .rejects
+              .toThrow(/^indexes must be a non-empty array. Actual\s+\[object Object\]$/)
+          })
 
-      it('should reject empty array', async () => {
-        class UniqueUser extends User {
-          static indexes = []
-        }
+          it('should reject empty array', async () => {
+            const UniqueUser = extend(BaseClass => class extends BaseClass { static indexes = [] })
 
-        return expect(UniqueUser.applyIndexes())
-          .rejects
-          .toThrow(/^indexes must be a non-empty array. Actual\s+$/)
-      })
+            return expect(UniqueUser.applyIndexes())
+              .rejects
+              .toThrow(/^indexes must be a non-empty array. Actual\s+$/)
+          })
 
-      it('should reject all but array type as fields', async () => {
-        class UniqueUser extends User {
-          static indexes = [{ fields: {} }]
-        }
+          it('should reject all but array type as fields', async () => {
+            const UniqueUser = extend(BaseClass => class extends BaseClass { static indexes = [{ fields: {} }] })
 
-        return expect(UniqueUser.applyIndexes())
-          .rejects
-          .toThrow(/^index.fields must be a non-empty array. Actual\s+\[object Object\]$/)
-      })
+            return expect(UniqueUser.applyIndexes())
+              .rejects
+              .toThrow(/^index.fields must be a non-empty array. Actual\s+\[object Object\]$/)
+          })
 
-      it('should reject empty array as fields', async () => {
-        class UniqueUser extends User {
-          static indexes = [{ fields: [] }]
-        }
+          it('should reject empty array as fields', async () => {
+            const UniqueUser = extend(BaseClass => class extends BaseClass { static indexes = [{ fields: [] }] })
 
-        return expect(UniqueUser.applyIndexes())
-          .rejects
-          .toThrow(/^index.fields must be a non-empty array. Actual\s+$/)
-      })
+            return expect(UniqueUser.applyIndexes())
+              .rejects
+              .toThrow(/^index.fields must be a non-empty array. Actual\s+$/)
+          })
 
-      it('should reject empty "type"', async () => {
-        class UniqueUser extends User {
-          static indexes = [{
-            fields: ['name']
-          }]
-        }
+          it('should reject empty "type"', async () => {
+            const UniqueUser = extend(BaseClass => class extends BaseClass { static indexes = [{ fields: ['name'] }] })
 
-        return expect(UniqueUser.applyIndexes())
-          .rejects
-          .toThrow(/^index.type must be a string. Actual\s+undefined$/)
-      })
+            return expect(UniqueUser.applyIndexes())
+              .rejects
+              .toThrow(/^index.type must be a string. Actual\s+undefined$/)
+          })
 
-      it('should reject non-string "type"', async () => {
-        class UniqueUser extends User {
-          static indexes = [{
-            type: {},
-            fields: ['name']
-          }]
-        }
+          it('should reject non-string "type"', async () => {
+            const UniqueUser = extend(BaseClass => class extends BaseClass {
+              static indexes = [{
+                type: {},
+                fields: ['name']
+              }]
+            })
 
-        return expect(UniqueUser.applyIndexes())
-          .rejects
-          .toThrow(/^index.type must be a string. Actual\s+\[object Object\]$/)
-      })
+            return expect(UniqueUser.applyIndexes())
+              .rejects
+              .toThrow(/^index.type must be a string. Actual\s+\[object Object\]$/)
+          })
 
-      it('should apply only new indexes', async () => {
-        const uniqueIndex = {
-          type: 'hash',
-          fields: ['name'],
-          unique: true,
-          deduplicate: true
-        }
+          it('should apply only new indexes', async () => {
+            const uniqueIndex = {
+              type: 'hash',
+              fields: ['name'],
+              unique: true,
+              deduplicate: true
+            }
 
-        await collection.createIndex(uniqueIndex)
+            await collection.createIndex(uniqueIndex)
 
-        const fulltextIndex = {
-          type: 'fulltext',
-          fields: ['extendedKeywords'],
-          minLength: 2
-        }
+            const fulltextIndex = {
+              type: 'fulltext',
+              fields: ['extendedKeywords'],
+              minLength: 2
+            }
 
-        class UniqueUser extends User {
-          static indexes = [
-            uniqueIndex,
-            fulltextIndex
-          ]
-        }
+            const UniqueUser = extend(BaseClass => class extends BaseClass {
+              static indexes = [
+                uniqueIndex,
+                fulltextIndex
+              ]
+            })
 
-        await UniqueUser.applyIndexes()
+            await UniqueUser.applyIndexes()
 
-        const actualIndexes = await connector.collection(userCollectionName).indexes()
+            const actualIndexes = await connector.collection(userCollectionName).indexes()
 
-        expect(actualIndexes).toEqual([
-          expect.objectContaining({
-            type: 'primary',
-            fields: ['_key'],
-            unique: true
-          }),
+            expect(actualIndexes).toEqual([
+              expect.objectContaining({
+                type: 'primary',
+                fields: ['_key'],
+                unique: true
+              }),
 
-          expect.objectContaining(uniqueIndex),
-          expect.objectContaining(fulltextIndex)
-        ])
+              expect.objectContaining(uniqueIndex),
+              expect.objectContaining(fulltextIndex)
+            ])
+          })
+        })
       })
     })
 
@@ -580,28 +591,33 @@ describe('lib/collection_factory', () => {
         expect(existingUser._rev).toBe(actualUser._rev)
       })
 
-      it('should run "$beforeSave()" hook', async () => {
-        class FullnameUser extends User {
-          $beforeSave (props) {
-            return Promise.resolve({
-              ...props,
-              fullname: `${props.firstname} ${props.lastname}`
-            })
-          }
-        }
+      Object.entries({
+        classic (extend) { return extend(User) },
+        integrated: integratedExtend
+      }).forEach(([extendType, extend]) => {
+        it(`should run "$beforeSave()" hook with ${extendType} extend type`, async () => {
+          const FullnameUser = extend(BaseClass => class extends BaseClass {
+            $beforeSave (props) {
+              return Promise.resolve({
+                ...props,
+                fullname: `${props.firstname} ${props.lastname}`
+              })
+            }
+          })
 
-        const [doc] = docs
-        const user = new FullnameUser(doc)
-        const insertedUser = await user.$save()
-        const actualUser = await (await collection.all()).next()
+          const [doc] = docs
+          const user = new FullnameUser(doc)
+          const insertedUser = await user.$save()
+          const actualUser = await (await collection.all()).next()
 
-        const expected = expect.objectContaining({
-          ...doc,
-          fullname: `${doc.firstname} ${doc.lastname}`
+          const expected = expect.objectContaining({
+            ...doc,
+            fullname: `${doc.firstname} ${doc.lastname}`
+          })
+
+          expect(actualUser).toEqual(expected)
+          expect(insertedUser).toEqual(expected)
         })
-
-        expect(actualUser).toEqual(expected)
-        expect(insertedUser).toEqual(expected)
       })
     })
 

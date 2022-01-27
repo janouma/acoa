@@ -7,6 +7,7 @@ name | description | type | required
 ---- | ----------- | ---- | --------
 connector | The db link | `arangojs.Database` | yes
 collectionName | The name of the target collection | `String` | yes
+extend | A function receiving the created collection as sole parameter and returning a subclassed version of the collection  | `Function` | no
 
 <br>
 

@@ -8,7 +8,7 @@ const connector = require('./connector')
 
 const SALT_ROUNDS = 10
 
-class Person extends createDocumentCollection(connector, 'persons') {
+const Person = createDocumentCollection(connector, 'persons', BaseCollection => class extends BaseCollection {
   static indexes = [
     {
       type: 'hash',
@@ -28,7 +28,7 @@ class Person extends createDocumentCollection(connector, 'persons') {
 
     return props
   }
-}
+})
 
 module.exports = Person
 ```

@@ -244,7 +244,7 @@ There are situations where you would want to extend a collection class:
 Here is an example of index configuration:
 
 ```javascript
-class Person extends createDocumentCollection(connector, 'persons') {
+const Person = createDocumentCollection(connector, 'persons', BaseCollection => class extends BaseCollection {
   static indexes = [
     {
       type: 'hash',
@@ -253,7 +253,7 @@ class Person extends createDocumentCollection(connector, 'persons') {
       deduplicate: true
     }
   ]
-}
+})
 ```
 
 Indexes are created along with the collection – *by calling the `create()` static method* – or on `applyIndexes()` static method call.
@@ -267,7 +267,7 @@ As his name suggests, the `$beforeSave()` hook is called when the instance metho
 Here is an example of hook implementation:
 
 ```javascript
-class Person extends createDocumentCollection(connector, 'persons') {
+const Person = createDocumentCollection(connector, 'persons', BaseCollection => class extends BaseCollection {
   async $beforeSave (props) {
     if (props.password) {
       return {
@@ -278,7 +278,7 @@ class Person extends createDocumentCollection(connector, 'persons') {
 
     return props
   }
-}
+})
 ```
 
 > A modified copy of the argument, or the unmodified argument itself should always be returned, as it contains all the properties that will be actually saved in the db. If an empty `Object` returns, nothing will be saved: no attempt to reach the db will be made.
@@ -296,7 +296,7 @@ const { aql } = require('arangojs')
 const { createDocumentCollection } = require('acoa')
 const connector = require('./connector')
 
-class Tag extends createDocumentCollection(connector, 'tags') {
+const Tag = createDocumentCollection(connector, 'tags', BaseCollection => class extends BaseCollection {
   static async findWorkspaces (userId) {
     const query = aql`FOR tag IN ${this._rawCollection}
       FILTER (
@@ -311,7 +311,7 @@ class Tag extends createDocumentCollection(connector, 'tags') {
     const cursor = await this.connector.query(query)
     return (await cursor.all()).map(doc => new this(doc))
   }
-}
+})
 ```
 
 <br>
