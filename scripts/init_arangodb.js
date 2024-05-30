@@ -3,6 +3,7 @@
 
 const url = require('url')
 const { spawn } = require('child_process')
+const { Transform } = require('stream')
 const { Database } = require('arangojs')
 
 const {
@@ -21,22 +22,30 @@ const args = [
   'arangodb:3.10.4'
 ]
 
-const command = `docker ${args.join(' ')}`
-console.info(command)
+const command = 'docker ' + args.join(' ')
+console.info(`\x1b[1m\x1b[34mcommand: ${command}\x1b[89m\x1b[22m\x1b[0m`)
 
 const proc = spawn('docker', args)
 const { stdout, stderr } = proc
 
 stdout.pipe(process.stdout)
-stderr.pipe(process.stderr)
 
-proc.on('close', code => console.log(`"${command}" process exited with code ${code}`))
+const colorizeStdErr = new Transform({
+  transform (chunk, _, callback) {
+    const noError = undefined
+    callback(noError, `\x1b[31m${String(chunk)}\x1b[89m\x1b[0m`)
+  }
+})
+
+stderr.pipe(colorizeStdErr).pipe(process.stderr)
+
+proc.on('close', code => console.log(`\x1b[1m\x1b[${code > 0 ? 31 : 34}m"${command}" exited with code ${code}\x1b[89m\x1b[22m\x1b[0m`))
 
 initDb()
-  .then(() => 'db init successfull')
+  .then(() => console.info('\x1b[1m\x1b[32m✔ db init successfull\x1b[89m\x1b[22m\x1b[0m'))
   .catch(error => {
-    console.error(error)
-    console.info('x build failed')
+    console.error('\x1b[1m\x1b[31mx db init failed')
+    console.error(error + '\x1b[22m\x1b[0m')
     process.exit(1)
   })
 
@@ -45,19 +54,19 @@ async function initDb () {
     url: `http://root:${rootPassword}@${testDbParsedUrl.hostname}:` + testDbParsedUrl.port
   })
 
-  await tryToCreateDb(connector)
+  return tryToCreateDb(connector)
 }
 
 function tryToCreateDb (connector) {
   return new Promise((resolve, reject) => {
-    const delay = 1000
+    const delay = 3000
     let retryCount = 0
 
     setTimeout(function tryToCreateDB () {
       createDatabase(connector)
         .then(resolve)
         .catch(error => {
-          console.warn(error.message)
+          console.warn(`\x1b[1m\x1b[33m${error.name}: `, error.message + '\x1b[89m\x1b[22m\x1b[0m')
 
           if (retryCount++ > 5) {
             reject(error)
