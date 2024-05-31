@@ -81,6 +81,11 @@ describe('lib/query', () => {
       .toBeUndefined()
   })
 
+  it('should bind boolean operator functions properly', () => {
+    const hasOwnProperty = new Query(Item, 'findByName', 'large screen').and.hasOwnProperty
+    expect(hasOwnProperty.call({ ownProperty: 'own value' }, 'ownProperty')).toBe(false)
+  })
+
   ;[
     ['findByName', 'exact match', ['large screen'], [docs[0]]],
     ['findByNameEqual', 'exact match', ['large screen'], [docs[0]]],
