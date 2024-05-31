@@ -19,38 +19,40 @@ describe('lib/proxies', () => {
     const cacheSym = Symbol('cache')
 
     class User {
-      static findByName () {}
       static [cacheSym] = { cachedProp: 'cached' }
+      static getClass () { return this }
 
       _updatedFields = new Set()
     }
 
-    const UserProxy = createClassProxy(User)
-
-    it('should create Proxy that returns value of existing string prop', () => expect(UserProxy.findByName).toBe(User.findByName))
-    it('should create Proxy that returns value of existing Symbol prop', () => expect(UserProxy[cacheSym]).toBe(User[cacheSym]))
+    Reflect.setPrototypeOf(User, createClassProxy())
 
     it(
       'should create Proxy that returns undefined for unknown prop not matching query pattern',
-      () => expect(UserProxy.unknown).not.toBeDefined()
+      () => expect(User.unknown).not.toBeDefined()
     )
 
     it('should create Proxy that returns Query factory for unkown prop matching query pattern', () => {
       const age = 36
-      expect(UserProxy.findByAge(age)).toEqual(expect.any(Query))
+      expect(User.findByAge(age)).toEqual(expect.any(Query))
       expect(Query).toHaveBeenCalledWith(User, 'findByAge', age)
     })
   })
 
   describe('#createInstanceProxy', () => {
     const job = 'agent'
+
+    let user
     let userProxy
 
     beforeEach(() => {
-      userProxy = createInstanceProxy({
+      user = {
         _updatedFields: new Set(),
-        job
-      })
+        job,
+        getInstance () { return this }
+      }
+
+      userProxy = createInstanceProxy(user)
     })
 
     it('should create Proxy that marks set prop as updated field', () => {
@@ -77,6 +79,10 @@ describe('lib/proxies', () => {
 
       expect(userProxy[prop]).toBe(value)
       expect(userProxy._updatedFields.has(prop)).toBe(false)
+    })
+
+    it('should bind proxy instance functions properly', () => {
+      expect(userProxy.getInstance()).toBe(user)
     })
   })
 })

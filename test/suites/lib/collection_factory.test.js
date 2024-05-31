@@ -5,7 +5,6 @@
 const connector = require('../../connector')
 const { createDocumentCollection, createEdgeCollection, CollectionAdapter } = require('../../../lib/collection_factory')
 const docs = require('../../fixtures/users')
-const { createClassProxy } = require('../../../lib/proxy_factory')
 
 jest.mock('../../../lib/proxy_factory', () => ({
   createInstanceProxy: collectionInstance => {
@@ -15,11 +14,7 @@ jest.mock('../../../lib/proxy_factory', () => ({
     return jest.requireActual('../../../lib/proxy_factory').createInstanceProxy(instanceDelegate)
   },
 
-  createClassProxy: jest.fn(CollectionClass => jest.requireActual('../../../lib/proxy_factory').createClassProxy(
-    class extends CollectionClass {
-      static isClassProxy = () => true
-    }
-  )).mockName('createClassProxy')
+  createClassProxy: jest.requireActual('../../../lib/proxy_factory').createClassProxy
 }))
 
 const DOCUMENT_COLLECTION_TYPE = 2
@@ -33,16 +28,11 @@ describe('lib/collection_factory', () => {
   const connectionCollectionName = 'connections'
 
   function integratedExtend (extend) {
-    const extendedCollection = createDocumentCollection(
+    return createDocumentCollection(
       connector,
       userCollectionName,
       extend
     )
-
-    const extendProperties = { ...extend(class {}) }
-
-    expect(createClassProxy).toHaveBeenCalledWith(expect.objectContaining(extendProperties))
-    return extendedCollection
   }
 
   afterEach(() => {
@@ -162,8 +152,6 @@ describe('lib/collection_factory', () => {
         a: 'A'
       }))
     })
-
-    it('should be a Proxy', () => expect(User.isClassProxy()).toBe(true))
 
     describe('#exists', () => {
       it('should return true if collection exists', async () => {
@@ -444,12 +432,16 @@ describe('lib/collection_factory', () => {
 
     it('should be a Proxy', () => expect(new User().isInstanceProxy()).toBe(true))
 
+    it(
+      'should be an instance of CollectionAdapter',
+      () => expect(new User() instanceof CollectionAdapter).toBe(true)
+    )
+
     describe('#$save', () => {
       it('should insert new document', async () => {
         const [doc] = docs
         const user = new User(doc)
         const insertedUser = await user.$save()
-
         const actualUser = await (await collection.all()).next()
 
         expect(actualUser).toEqual(expect.objectContaining(doc))
