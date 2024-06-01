@@ -41,13 +41,14 @@ describe('lib/proxies', () => {
 
   describe('#createInstanceProxy', () => {
     const job = 'agent'
+    const _updatedFields = Symbol.for('_updatedFields')
 
     let user
     let userProxy
 
     beforeEach(() => {
       user = {
-        _updatedFields: new Set(),
+        [_updatedFields]: new Set(),
         job,
         getInstance () { return this }
       }
@@ -60,12 +61,12 @@ describe('lib/proxies', () => {
       userProxy.name = name
 
       expect(userProxy.name).toBe(name)
-      expect(userProxy._updatedFields.has('name')).toBe(true)
+      expect(userProxy[_updatedFields].has('name')).toBe(true)
     })
 
     it('should create Proxy that does NOT mark unchanged set prop as updated field', () => {
       userProxy.job = job
-      expect(userProxy._updatedFields.has('job')).toBe(false)
+      expect(userProxy[_updatedFields].has('job')).toBe(false)
     })
 
     it.each([
@@ -78,7 +79,7 @@ describe('lib/proxies', () => {
       userProxy[prop] = value
 
       expect(userProxy[prop]).toBe(value)
-      expect(userProxy._updatedFields.has(prop)).toBe(false)
+      expect(userProxy[_updatedFields].has(prop)).toBe(false)
     })
 
     it('should bind proxy instance functions properly', () => {

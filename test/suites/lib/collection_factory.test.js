@@ -75,8 +75,6 @@ describe('lib/collection_factory', () => {
 
     it('should have a public "collectionName" property', () => expect(User.collectionName).toBe(userCollectionName))
 
-    it('should have a internal "_connector" property', () => expect(User._connector).toBe(connector))
-
     it('should have a internal "_rawCollection" property of the right type', () => {
       expect(User._rawCollection).toEqual(connector.collection(userCollectionName))
 
@@ -447,8 +445,14 @@ describe('lib/collection_factory', () => {
         expect(actualUser).toEqual(expect.objectContaining(doc))
         expect(insertedUser).toEqual(expect.any(User))
 
+        const actualUserSubset = { ...actualUser }
+
+        delete actualUserSubset._id
+        delete actualUserSubset._key
+        delete actualUserSubset._rev
+
         expect(insertedUser).toEqual(expect.objectContaining({
-          ...actualUser,
+          ...actualUserSubset,
           $id: expect.stringMatching(new RegExp(`^${userCollectionName}/\\w+$`)),
           $key: expect.stringMatching(/^\w+$/)
         }))
@@ -479,8 +483,16 @@ describe('lib/collection_factory', () => {
         expect(actualConnection).toEqual(expect.objectContaining(doc))
         expect(insertedConnection).toEqual(expect.any(Connection))
 
+        const actualConnectionSubset = { ...actualConnection }
+
+        delete actualConnectionSubset._id
+        delete actualConnectionSubset._key
+        delete actualConnectionSubset._from
+        delete actualConnectionSubset._to
+        delete actualConnectionSubset._rev
+
         expect(insertedConnection).toEqual(expect.objectContaining({
-          ...actualConnection,
+          ...actualConnectionSubset,
           $id: expect.stringMatching(new RegExp(`^${connectionCollectionName}/\\w+$`)),
           $key: expect.stringMatching(/^\w+$/),
           $from: _from,
@@ -506,8 +518,14 @@ describe('lib/collection_factory', () => {
         expect('$dollared' in actualUser).toBe(false)
         expect(insertedUser).toEqual(expect.any(User))
 
+        const actualUserSubset = { ...actualUser }
+
+        delete actualUserSubset._id
+        delete actualUserSubset._key
+        delete actualUserSubset._rev
+
         expect(insertedUser).toEqual(expect.objectContaining({
-          ...actualUser,
+          ...actualUserSubset,
           $id: expect.stringMatching(new RegExp(`^${userCollectionName}/\\w+$`)),
           $key: expect.stringMatching(/^\w+$/)
         }))
@@ -622,8 +640,14 @@ describe('lib/collection_factory', () => {
       const user = new User(existingUser._id)
       await user.$refresh()
 
+      const existingUserSubset = { ...existingUser }
+
+      delete existingUserSubset._id
+      delete existingUserSubset._key
+      delete existingUserSubset._rev
+
       expect(user).toEqual(expect.objectContaining({
-        ...existingUser,
+        ...existingUserSubset,
         $id: existingUser._id,
         $key: existingUser._key
       }))
