@@ -2,12 +2,7 @@
   "name": "acoa",
   "version": "1.3.0",
   "description": "ArangoDB Collection Object Adapter (ODM)",
-  "keywords": [
-    "arango",
-    "db",
-    "graph",
-    "odm"
-  ],
+  "keywords": ["arango", "db", "graph", "odm"],
   "author": "janouma",
   "license": "ISC",
   "repository": {
@@ -15,6 +10,7 @@
     "url": "git+https://github.com/janouma/acoa.git"
   },
   "main": "index.js",
+  "files": ["lib", "doc"],
   "config": {
     "testDbUrl": "http://test:evod@localhost:8529",
     "testDbName": "acoa-test",
@@ -27,19 +23,13 @@
     "stop": "docker container stop $npm_package_config_testDbContainer",
     "test": "jest --bail --maxWorkers=1"
   },
-  "pre-commit": [
-    "lint"
-  ],
-  "pre-push": [
-    "test"
-  ],
+  "pre-commit": ["lint"],
+  "pre-push": ["test"],
   "standard": {
     "parser": "babel-eslint"
   },
   "eslintConfig": {
-    "extends": [
-      "standard"
-    ],
+    "extends": ["standard"],
     "parser": "babel-eslint"
   },
   "devDependencies": {
