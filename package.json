@@ -30,9 +30,10 @@
     "start": "node scripts/init_arangodb",
     "stop": "docker container stop $npm_package_config_testDbContainer",
     "test": "jest --bail --maxWorkers=1",
-    "tag": "git tag \"v$npm_package_version\"",
+    "tag": "git tag v$npm_package_version",
+    "untag": "git tag -d v$npm_package_version",
     "prepush:tag": "npm run tag",
-    "push:tag": "git push \"v$npm_package_version\" --no-verify"
+    "push:tag": "git push origin v$npm_package_version --no-verify"
   },
   "pre-commit": [
     "lint"
