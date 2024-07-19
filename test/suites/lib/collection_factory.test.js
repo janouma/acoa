@@ -4,6 +4,8 @@
 
 const connector = require('../../connector')
 const { createDocumentCollection, createEdgeCollection, CollectionAdapter } = require('../../../lib/collection_factory')
+const Query = require('../../../lib/query')
+
 const docs = require('../../fixtures/users')
 
 jest.mock('../../../lib/proxy_factory', () => ({
@@ -44,22 +46,36 @@ describe('lib/collection_factory', () => {
     ])
   })
 
-  it('#createDocumentCollection should create document collection Class', async () => {
-    const User = createDocumentCollection(connector, userCollectionName)
-    await User.create()
+  describe('#createDocumentCollection', () => {
+    it('should create document collection Class', async () => {
+      const User = createDocumentCollection(connector, userCollectionName)
+      await User.create()
 
-    const collection = connector.collection(userCollectionName)
-    expect(await collection.exists()).toBe(true)
-    expect(collection.type).toBe(DOCUMENT_COLLECTION_TYPE)
+      const collection = connector.collection(userCollectionName)
+      expect(await collection.exists()).toBe(true)
+      expect(collection.type).toBe(DOCUMENT_COLLECTION_TYPE)
+    })
+
+    it('should allow simple queries through dynamique methods', async () => {
+      const User = createDocumentCollection(connector, userCollectionName)
+      expect(User.findByName('name')).toBeInstanceOf(Query)
+    })
   })
 
-  it('#createEdgeCollection should create document collection Class', async () => {
-    const Connection = createEdgeCollection(connector, connectionCollectionName)
-    await Connection.create()
+  describe('#createEdgeCollection', () => {
+    it('#createEdgeCollection should create document collection Class', async () => {
+      const Connection = createEdgeCollection(connector, connectionCollectionName)
+      await Connection.create()
 
-    const collection = connector.edgeCollection(connectionCollectionName)
-    expect(await collection.exists()).toBe(true)
-    expect(collection.type).toBe(EDGE_COLLECTION_TYPE)
+      const collection = connector.edgeCollection(connectionCollectionName)
+      expect(await collection.exists()).toBe(true)
+      expect(collection.type).toBe(EDGE_COLLECTION_TYPE)
+    })
+
+    it('should allow simple queries through dynamique methods', async () => {
+      const Connection = createEdgeCollection(connector, userCollectionName)
+      expect(Connection.findBy_from('user-id')).toBeInstanceOf(Query)
+    })
   })
 
   it('#CollectionAdapter should not be instanciated directly', () => {

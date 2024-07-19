@@ -25,16 +25,16 @@ describe('lib/proxies', () => {
       _updatedFields = new Set()
     }
 
-    Reflect.setPrototypeOf(User, createClassProxy())
+    const UserProxy = createClassProxy(User)
 
     it(
       'should create Proxy that returns undefined for unknown prop not matching query pattern',
-      () => expect(User.unknown).not.toBeDefined()
+      () => expect(UserProxy.unknown).not.toBeDefined()
     )
 
     it('should create Proxy that returns Query factory for unkown prop matching query pattern', () => {
       const age = 36
-      expect(User.findByAge(age)).toEqual(expect.any(Query))
+      expect(UserProxy.findByAge(age)).toEqual(expect.any(Query))
       expect(Query).toHaveBeenCalledWith(User, 'findByAge', age)
     })
   })
