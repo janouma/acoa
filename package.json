@@ -29,7 +29,10 @@
     "lint": "eslint --no-error-on-unmatched-pattern \"index.js\" \"lib/**/*.js\" \"utils/**/*.js\" \"test/**/*.js\" \"scripts/**/*.js\"",
     "start": "node scripts/init_arangodb",
     "stop": "docker container stop $npm_package_config_testDbContainer",
-    "test": "jest --bail --maxWorkers=1"
+    "test": "jest --bail --maxWorkers=1",
+    "tag": "git tag \"v$npm_package_version\"",
+    "prepush:tag": "npm run tag",
+    "push:tag": "git push \"v$npm_package_version\" --no-verify"
   },
   "pre-commit": [
     "lint"
