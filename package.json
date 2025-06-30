@@ -1,6 +1,6 @@
 {
   "name": "acoa",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "ArangoDB Collection Object Adapter (ODM)",
   "keywords": [
     "arango",
@@ -65,8 +65,8 @@
     "arangojs": "^6.14.1"
   },
   "engines": {
-    "node": "^12.14.1",
-    "npm": "^6.13.7"
+    "node": ">=12.14.1",
+    "npm": ">=6.13.7"
   },
   "volta": {
     "node": "12.14.1",
